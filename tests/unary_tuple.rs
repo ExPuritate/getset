@@ -1,3 +1,6 @@
+#![feature(const_destruct)]
+#![feature(const_trait_impl)]
+
 use getset::{CopyGetters, Getters, MutGetters, Setters, WithSetters};
 
 #[test]

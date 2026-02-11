@@ -259,6 +259,7 @@ struct CopyUnaryTuple(#[getset(get_copy)] i32);
 let tup = CopyUnaryTuple(42);
 ```
 */
+#![feature(decl_macro)]
 
 #[macro_use]
 extern crate quote;
@@ -272,76 +273,30 @@ use crate::generate::{GenMode, GenParams};
 
 mod generate;
 
-#[proc_macro_derive(Getters, attributes(get, with_prefix, getset))]
-#[proc_macro_error]
-pub fn getters(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let params = GenParams {
-        mode: GenMode::Get,
-        global_attr: parse_global_attr(&ast.attrs, GenMode::Get),
-    };
+macro define($(
+    $Name:ident[$($attr:ident),* $(,)?] $Mode:ident;
+)*) {$(
+    #[proc_macro_derive($Name, attributes($($attr),*))]
+    #[proc_macro_error]
+    #[allow(nonstandard_style)]
+    pub fn $Name(input: TokenStream) -> TokenStream {
+        let ast = parse_macro_input!(input as DeriveInput);
+        let params = GenParams {
+            mode: GenMode::$Mode,
+            global_attr: parse_global_attr(&ast.attrs, GenMode::$Mode),
+        };
 
-    produce(&ast, &params).into()
-}
+        produce(&ast, &params).into()
+    }
+)*}
 
-#[proc_macro_derive(CloneGetters, attributes(get_clone, with_prefix, getset))]
-#[proc_macro_error]
-pub fn clone_getters(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let params = GenParams {
-        mode: GenMode::GetClone,
-        global_attr: parse_global_attr(&ast.attrs, GenMode::GetClone),
-    };
-
-    produce(&ast, &params).into()
-}
-
-#[proc_macro_derive(CopyGetters, attributes(get_copy, with_prefix, getset))]
-#[proc_macro_error]
-pub fn copy_getters(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let params = GenParams {
-        mode: GenMode::GetCopy,
-        global_attr: parse_global_attr(&ast.attrs, GenMode::GetCopy),
-    };
-
-    produce(&ast, &params).into()
-}
-
-#[proc_macro_derive(MutGetters, attributes(get_mut, getset))]
-#[proc_macro_error]
-pub fn mut_getters(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let params = GenParams {
-        mode: GenMode::GetMut,
-        global_attr: parse_global_attr(&ast.attrs, GenMode::GetMut),
-    };
-
-    produce(&ast, &params).into()
-}
-
-#[proc_macro_derive(Setters, attributes(set, getset))]
-#[proc_macro_error]
-pub fn setters(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let params = GenParams {
-        mode: GenMode::Set,
-        global_attr: parse_global_attr(&ast.attrs, GenMode::Set),
-    };
-
-    produce(&ast, &params).into()
-}
-
-#[proc_macro_derive(WithSetters, attributes(set_with, getset))]
-#[proc_macro_error]
-pub fn with_setters(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let params = GenParams {
-        mode: GenMode::SetWith,
-        global_attr: parse_global_attr(&ast.attrs, GenMode::SetWith),
-    };
-
-    produce(&ast, &params).into()
+define! {
+    Getters[get, with_prefix, getset] Get;
+    CloneGetters[get_clone, with_prefix, getset] GetClone;
+    CopyGetters[get_copy, with_prefix, getset] GetCopy;
+    MutGetters[get_mut, getset] GetMut;
+    Setters[set, getset] Set;
+    WithSetters[set_with, getset] SetWith;
 }
 
 fn parse_global_attr(attrs: &[syn::Attribute], mode: GenMode) -> Option<Meta> {

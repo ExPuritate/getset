@@ -1,3 +1,6 @@
+#![feature(const_trait_impl)]
+#![feature(const_clone)]
+
 #[macro_use]
 extern crate getset;
 

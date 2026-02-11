@@ -100,10 +100,10 @@ pub fn parse_visibility(attr: Option<&Meta>, meta_name: &str) -> Option<Visibili
 fn has_prefix_attr(f: &Field, params: &GenParams) -> bool {
     // helper function to check if meta has `with_prefix` attribute
     let meta_has_prefix = |meta: &Meta| -> bool {
-        if let Meta::NameValue(name_value) = meta {
-            if let Some(s) = expr_to_string(&name_value.value) {
-                return s.split(" ").any(|v| v == "with_prefix");
-            }
+        if let Meta::NameValue(name_value) = meta
+            && let Some(s) = expr_to_string(&name_value.value)
+        {
+            return s.split(" ").any(|v| v == "with_prefix");
         }
         false
     };
@@ -148,6 +148,7 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                     ""
                 },
                 params.mode.prefix(),
+                /* cSpell:disable-next-line */
                 field_name.unraw(),
                 params.mode.suffix()
             ),
@@ -174,7 +175,7 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&self) -> &#ty {
+                    #visibility const fn #fn_name(&self) -> &#ty {
                         &self.#field_name
                     }
                 }
@@ -183,7 +184,8 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&self) -> #ty {
+                    #visibility const fn #fn_name(&self) -> #ty
+                    where #ty: [const] ::std::clone::Clone {
                         self.#field_name.clone()
                     }
                 }
@@ -192,7 +194,7 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&self) -> #ty {
+                    #visibility const fn #fn_name(&self) -> #ty {
                         self.#field_name
                     }
                 }
@@ -201,7 +203,8 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&mut self, val: #ty) -> &mut Self {
+                    #visibility const fn #fn_name(&mut self, val: #ty) -> &mut Self
+                    where #ty: [const] ::std::marker::Destruct {
                         self.#field_name = val;
                         self
                     }
@@ -211,7 +214,7 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&mut self) -> &mut #ty {
+                    #visibility const fn #fn_name(&mut self) -> &mut #ty {
                         &mut self.#field_name
                     }
                 }
@@ -220,7 +223,8 @@ pub fn implement(field: &Field, params: &GenParams) -> TokenStream2 {
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(mut self, val: #ty) -> Self {
+                    #visibility const fn #fn_name(mut self, val: #ty) -> Self
+                    where #ty: [const] ::std::marker::Destruct {
                         self.#field_name = val;
                         self
                     }
@@ -251,7 +255,7 @@ pub fn implement_for_unnamed(field: &Field, params: &GenParams) -> TokenStream2 
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&self) -> &#ty {
+                    #visibility const fn #fn_name(&self) -> &#ty {
                         &self.0
                     }
                 }
@@ -261,7 +265,8 @@ pub fn implement_for_unnamed(field: &Field, params: &GenParams) -> TokenStream2 
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&self) -> #ty {
+                    #visibility const fn #fn_name(&self) -> #ty
+                    where #ty: [const] ::std::clone::Clone {
                         self.0.clone()
                     }
                 }
@@ -271,7 +276,7 @@ pub fn implement_for_unnamed(field: &Field, params: &GenParams) -> TokenStream2 
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&self) -> #ty {
+                    #visibility const fn #fn_name(&self) -> #ty {
                         self.0
                     }
                 }
@@ -281,7 +286,8 @@ pub fn implement_for_unnamed(field: &Field, params: &GenParams) -> TokenStream2 
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&mut self, val: #ty) -> &mut Self {
+                    #visibility const fn #fn_name(&mut self, val: #ty) -> &mut Self
+                    where #ty: [const] ::std::marker::Destruct {
                         self.0 = val;
                         self
                     }
@@ -292,7 +298,7 @@ pub fn implement_for_unnamed(field: &Field, params: &GenParams) -> TokenStream2 
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(&mut self) -> &mut #ty {
+                    #visibility const fn #fn_name(&mut self) -> &mut #ty {
                         &mut self.0
                     }
                 }
@@ -302,7 +308,8 @@ pub fn implement_for_unnamed(field: &Field, params: &GenParams) -> TokenStream2 
                 quote! {
                     #(#doc)*
                     #[inline(always)]
-                    #visibility fn #fn_name(mut self, val: #ty) -> Self {
+                    #visibility const fn #fn_name(mut self, val: #ty) -> Self
+                    where #ty: [const] ::std::marker::Destruct {
                         self.0 = val;
                         self
                     }

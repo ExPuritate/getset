@@ -1,3 +1,8 @@
+#![feature(const_trait_impl)]
+#![feature(const_destruct)]
+#![feature(const_clone)]
+#![allow(clippy::disallowed_names)]
+
 use std::sync::Arc;
 
 use getset::{CloneGetters, CopyGetters, Getters, MutGetters, Setters, WithSetters};
